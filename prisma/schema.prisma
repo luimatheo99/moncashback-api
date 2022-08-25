@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  phone      String   @unique
+  password   String
+  birth_date DateTime
+  genre      String
+  code       String
+  device_id  String?
+  avatar     String?
+  balance    Decimal
+  created_at DateTime @default(now())
+
+  UserCodes    UserCodes[]
+  Transactions Transactions[]
+  @@map("users")
+}
+
+model UserCodes {
+  id           String   @id @default(uuid())
+  code         String
+  id_user      String
+  user         Users    @relation(fields: [id_user], references: [id])
+  expires_date DateTime
+  created_at   DateTime @default(now())
+
+  @@map("users_codes")
+}
+
+model Categories {
+  id   String @id @default(uuid())
+  name String
+  icon String
+
+  Companies Companies[]
+  @@map("categories")
+}
+
+model States {
+  id   String @id @default(uuid())
+  name String
+  uf   String
+
+  Cities Cities[]
+
+  Companies Companies[]
+  @@map("states")
+}
+
+model Cities {
+  id       String @id @default(uuid())
+  name     String
+  id_state String
+  state    States @relation(fields: [id_state], references: [id])
+
+  Companies Companies[]
+  @@map("cities")
+}
+
+model Companies {
+  id                           String     @id @default(uuid())
+  name                         String
+  email                        String     @unique
+  phone                        String     @unique
+  facebook_url                 String?
+  instagram_url                String?
+  site_url                     String?
+  logo                         String?
+  id_category                  String
+  category                     Categories @relation(fields: [id_category], references: [id])
+  id_state                     String
+  state                        States     @relation(fields: [id_state], references: [id])
+  id_city                      String
+  city                         Cities     @relation(fields: [id_city], references: [id])
+  district                     String?
+  street                       String?
+  number                       Int?
+  maximum_redeption_limit_perc Decimal
+  active                       Boolean
+  created_at                   DateTime   @default(now())
+
+  Partners     Partners[]
+  Cashbacks    Cashbacks[]
+  Transactions Transactions[]
+  @@map("companies")
+}
+
+model Partners {
+  id         String    @id @default(uuid())
+  name       String
+  email      String    @unique
+  password   String
+  id_company String
+  company    Companies @relation(fields: [id_company], references: [id])
+
+  created_at DateTime @default(now())
+
+  @@map("partners")
+}
+
+model Cashbacks {
+  id           String    @id @default(uuid())
+  name         String
+  expires_date DateTime
+  id_company   String
+  company      Companies @relation(fields: [id_company], references: [id])
+  percentage   Decimal
+
+  created_at        DateTime            @default(now())
+  TransactionsItems TransactionsItems[]
+  @@map("cashbacks")
+}
+
+model Transactions {
+  id      String @id @default(uuid())
+  id_user String
+  user    Users  @relation(fields: [id_user], references: [id])
+
+  id_company String
+  company    Companies @relation(fields: [id_company], references: [id])
+
+  earned_value Decimal?
+  pay_value    Decimal?
+  amount       Decimal
+  type         String
+  situation    String
+  external_id  String
+  created_at   DateTime @default(now())
+
+  TransactionsItems TransactionsItems[]
+  @@map("transactions")
+}
+
+model TransactionsItems {
+  id             String       @id @default(uuid())
+  id_transaction String
+  transaction    Transactions @relation(fields: [id_transaction], references: [id])
+  id_cashback    String?
+  cashback       Cashbacks?   @relation(fields: [id_cashback], references: [id])
+  earned_value   Decimal?
+  pay_value      Decimal?
+  item_value     Decimal
+
+  @@map("transactions_items")
+}
